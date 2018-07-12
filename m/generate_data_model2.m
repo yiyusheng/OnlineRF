@@ -66,10 +66,11 @@ dlmwrite(strcat(dir_mydata,'smart2_train.data'), smart2_train_data, 'delimiter',
 dlmwrite(strcat(dir_mydata,'smart2_train.labels'), size(smart2_train_labels), 'delimiter', ' ', 'precision', '%u');
 dlmwrite(strcat(dir_mydata,'smart2_train.labels'), smart2_train_labels, 'delimiter', ' ', 'precision', '%u', '-append');
 dlmwrite(strcat(dir_mydata,'smart2_train.snids'), size(smart2_train_snids), 'delimiter', ' ', 'precision', '%u');
-dlmwrite(strcat(dir_mydata,'smart2_train.health'), smart2_train_health, 'delimiter', ' ', 'precision', '%u', '-append');
+dlmwrite(strcat(dir_mydata,'smart2_train.snids'), smart2_train_snids, 'delimiter', ' ', 'precision', '%u','-append');
 dlmwrite(strcat(dir_mydata,'smart2_train.health'), size(smart2_train_health), 'delimiter', ' ', 'precision', '%u');
-dlmwrite(strcat(dir_mydata,'smart2_train.time'), smart2_train_time, 'delimiter', ' ', 'precision', '%u', '-append');
+dlmwrite(strcat(dir_mydata,'smart2_train.health'), smart2_train_health, 'delimiter', ' ', 'precision', '%u', '-append');
 dlmwrite(strcat(dir_mydata,'smart2_train.time'), size(smart2_train_time), 'delimiter', ' ', 'precision', '%u');
+dlmwrite(strcat(dir_mydata,'smart2_train.time'), smart2_train_time, 'delimiter', ' ', 'precision', '%u', '-append');
 
 % For test
 smart2_test = add_health_degree(smart2_dtest);

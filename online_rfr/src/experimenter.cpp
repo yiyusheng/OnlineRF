@@ -14,7 +14,7 @@
 #include <fstream>
 #include <sys/time.h>
 #include <iomanip>
-
+#include <math.h>
 #include "experimenter.h"
 
 void train(Classifier* model, DataSet& dataset, Hyperparameters& hp) {
@@ -30,15 +30,14 @@ void train(Classifier* model, DataSet& dataset, Hyperparameters& hp) {
             if (hp.findTrainError) {
                 Result result(dataset.m_numClasses);
                 model->eval(dataset.m_samples[randIndex[nSamp]], result);
-                if (result.predictionR != dataset.m_samples[randIndex[nSamp]].y) {
-                    trainError[nEpoch] += (result.predictionR-dataset.m_samples[randIndex[nSamp]].y)*(result.predictionR-dataset.m_samples[randIndex[nSamp]].y);
-                    //trainError[nEpoch]++;
+                if (abs(result.predictionR-dataset.m_samples[randIndex[nSamp]].yr)>0.00001) {
+                    trainError[nEpoch] += (result.predictionR-dataset.m_samples[randIndex[nSamp]].yr)*(result.predictionR-dataset.m_samples[randIndex[nSamp]].yr);
                 }
             }
             
             model->update(dataset.m_samples[randIndex[nSamp]]);
             if (hp.verbose && (nSamp % sampRatio) == 0) {
-                cout << "\n\n--- " << model->name() << " training --- Epoch: " << nEpoch + 1 << " --- ";
+                cout << "--- " << model->name() << " training --- Epoch: " << nEpoch + 1 << " --- ";
                 cout << (10 * nSamp) / sampRatio << "%";
                 cout << " --- Training error = " << trainError[nEpoch] << "/" << nSamp \
                  << "=" << trainError[nEpoch]/nSamp <<  endl;
@@ -58,7 +57,6 @@ vector<Result> test(Classifier* model, DataSet& dataset, Hyperparameters& hp) {
     
     // Write the results
     string saveFile = hp.savePath + "errors";
-    cout << saveFile << endl;
     ofstream file(saveFile.c_str(), ios::binary);
     if (!file) {
         cout << "Could not access " << saveFile << endl;
@@ -70,10 +68,11 @@ vector<Result> test(Classifier* model, DataSet& dataset, Hyperparameters& hp) {
         Result result(dataset.m_numClasses);
         model->eval(dataset.m_samples[nSamp], result);
         results.push_back(result);
-        file << setprecision(4) << dataset.m_samples[nSamp].yr << "\t" << result.predictionR << endl;
+        file << setprecision(4) << \
+          dataset.m_samples[nSamp].yr << "\t" << result.predictionR <<\
+         "\t" << dataset.m_samples[nSamp].sn_id << "\t" << dataset.m_samples[nSamp].t << endl;
     }
     file.close();
-
     string error = compError(results, dataset);
 
     if (hp.verbose) {
@@ -147,35 +146,73 @@ vector<Result> trainAndTest(Classifier* model, DataSet& dataset_tr, DataSet& dat
 }
 
 string compError(const vector<Result>& results, const DataSet& dataset) {
-    int lables[dataset.m_numSamples][3];
+    int nWin = 10;
+    double threshold = 0.5;
+    double sample_result[dataset.m_numSamples][4];
     for (int nSamp = 0; nSamp < dataset.m_numSamples; nSamp++) {
-        lables[nSamp][0] = dataset.m_samples[nSamp].sn_id;
-        lables[nSamp][1] = dataset.m_samples[nSamp].y;
-        lables[nSamp][2] = results[nSamp].predictionR;
+      sample_result[nSamp][0] = dataset.m_samples[nSamp].sn_id;
+      sample_result[nSamp][1] = dataset.m_samples[nSamp].t;
+      sample_result[nSamp][2] = dataset.m_samples[nSamp].y;
+      sample_result[nSamp][3] = results[nSamp].predictionR;
     }
-    int disk_result[37000][3];
-    memset(disk_result, 0, sizeof(int)*37000*3);
-    for (int nSamp = 0; nSamp < dataset.m_numSamples; nSamp++) {
-        disk_result[lables[nSamp][0]][0]++;
-        disk_result[lables[nSamp][0]][1]+=lables[nSamp][1];
-        disk_result[lables[nSamp][0]][2]+=lables[nSamp][2];
+
+    int disk_result[37000][4];
+    memset(disk_result, 0, sizeof(int)*37000*4);
+
+    int p_left = 0;
+    for (int nSamp = 1; nSamp < dataset.m_numSamples; nSamp++) {
+      //if(sample_result[nSamp][2]==1)cout << nSamp << "-" << sample_result[nSamp][0] << "-" <<sample_result[nSamp][1] << "-" <<sample_result[nSamp][2] << "-" <<sample_result[nSamp][3] << endl;
+      int smp_sn = sample_result[nSamp][0];
+      if(smp_sn == sample_result[p_left][0])
+        continue;
+      else{
+        int p_right = nSamp;
+        for (int i=p_left+nWin; i<p_right; i++){
+          int j=0; double sumPred = 0,avePred = 0;
+
+          for (j=i-1; j>=max(i-nWin,p_left); j--){
+            sumPred += sample_result[j][3];
+          }
+
+          if(j==p_left-1)
+            avePred = sumPred/(i-p_left+1);
+          else 
+            avePred = sumPred/nWin;
+
+          if(avePred > threshold){
+            disk_result[smp_sn][0]++;  //valid data
+            disk_result[smp_sn][1]++;  //sample predicted as positive
+            disk_result[smp_sn][2] = sample_result[p_right-1][2]; //real y
+            disk_result[smp_sn][3] = sample_result[i][1]; //time in adance
+            break;
+          }else{
+            disk_result[smp_sn][0]++;
+            disk_result[smp_sn][1] = 0;
+            disk_result[smp_sn][2] = sample_result[p_right-1][2];
+            disk_result[smp_sn][3] = sample_result[i][1];
+          }
+        }
+        p_left = p_right;
+      }
     }
+
     int tp = 0, totalp = 0, fp = 0, totaln = 0;
     for (int i = 0; i < 37000; i++) {
-        if (disk_result[i][0] > 0) {
-            if (disk_result[i][1] == 0) {
-                totaln++;
-                if (disk_result[i][2] > 0) {
-                    fp++;
-                }
-            }
-            if (disk_result[i][1] > 0) {
-                totalp++;
-                if (disk_result[i][2] > 0) {
-                    tp++;
-                }
-            }
+      if (disk_result[i][0] > 0) {
+        //cout << i << "-" << disk_result[i][1] << "-" << disk_result[i][2] << endl;
+        if (disk_result[i][2] == 0) {
+          totaln++;
+          if (disk_result[i][1] > 0) {
+            fp++;
+          }
         }
+        if (disk_result[i][2] > 0) {
+          totalp++;
+          if (disk_result[i][1] > 0) {
+            tp++;
+          }
+        }
+      }
     }
     double error = fp + (totalp - tp);  // false positive and missing positive
     double testerror = error / (totalp + totaln);

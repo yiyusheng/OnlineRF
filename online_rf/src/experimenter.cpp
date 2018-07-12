@@ -134,35 +134,35 @@ vector<Result> trainAndTest(Classifier* model, DataSet& dataset_tr, DataSet& dat
 string compError(const vector<Result>& results, const DataSet& dataset) {
     int lables[dataset.m_numSamples][3];
     for (int nSamp = 0; nSamp < dataset.m_numSamples; nSamp++) {
-        lables[nSamp][0] = dataset.m_samples[nSamp].sn_id;
-        lables[nSamp][1] = dataset.m_samples[nSamp].y;
-        lables[nSamp][2] = results[nSamp].prediction;
+        lables[nSamp][0] = dataset.m_samples[nSamp].sn_id;  //sn
+        lables[nSamp][1] = dataset.m_samples[nSamp].y;      //real
+        lables[nSamp][2] = results[nSamp].prediction;       //pred
     }
     int disk_result[37000][3];
     memset(disk_result, 0, sizeof(int)*37000*3);
     for (int nSamp = 0; nSamp < dataset.m_numSamples; nSamp++) {
-        disk_result[lables[nSamp][0]][0]++;
-        disk_result[lables[nSamp][0]][1]+=lables[nSamp][1];
-        disk_result[lables[nSamp][0]][2]+=lables[nSamp][2];
+        disk_result[lables[nSamp][0]][0]++;                 //counter of samples
+        disk_result[lables[nSamp][0]][1]+=lables[nSamp][1]; //sum of y
+        disk_result[lables[nSamp][0]][2]+=lables[nSamp][2]; //sum of pred
     }
     int tp = 0, totalp = 0, fp = 0, totaln = 0;
     for (int i = 0; i < 37000; i++) {
         if (disk_result[i][0] > 0) {
             if (disk_result[i][1] == 0) {
-                totaln++;
+                totaln++;                                   //if sum of y==0 then sample is neg
                 if (disk_result[i][2] > 0) {
-                    fp++;
+                    fp++;                                   //if sum of pred>0 then false alarm
                 }
             }
             if (disk_result[i][1] > 0) {
-                totalp++;
+                totalp++;                                   //if sum of y>0 then sample is pos
                 if (disk_result[i][2] > 0) {
-                    tp++;
+                    tp++;                                   //if sum of pred>0 then true pos
                 }
             }
         }
     }
-    double error = fp + (totalp - tp);
+    double error = fp + (totalp - tp);                      //false alarm and missing pos
     double testerror = error / (totalp + totaln);
     double fdr = tp*1.0 / totalp;
     double far = fp*1.0 / totaln;
