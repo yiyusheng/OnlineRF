@@ -19,7 +19,9 @@
 using namespace std;
 using namespace libconfig;
 
-Hyperparameters::Hyperparameters(const string& confFile) {
+Hyperparameters::Hyperparameters(const string& confFile,\
+    double negP, double thre, int nw,\
+    int trainie, int testie) {
     cout << "Loading config file: " << confFile << " ... ";
 
     Config configFile;
@@ -76,6 +78,13 @@ Hyperparameters::Hyperparameters(const string& confFile) {
     // Output
     savePath = (const char *) configFile.lookup("Output.savePath");
     verbose = configFile.lookup("Output.verbose");
+
+    // Regression and convenient experiment
+    if(negP!=0)negPoisson = negP;
+    if(thre!=0)threshold = thre;
+    if(nw!=0)nWin = nw;
+    if(trainie!=0)trainIndEnd = trainie;
+    if(testie!=0)testIndEnd = testie;
 
     cout << "Done." << endl;
 }

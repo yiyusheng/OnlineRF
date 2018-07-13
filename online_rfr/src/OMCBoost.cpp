@@ -16,6 +16,7 @@
 #include <string>
 #include <string.h>
 #include <libconfig.h++>
+#include <stdlib.h>
 
 #include "data.h"
 #include "experimenter.h"
@@ -58,6 +59,8 @@ void help() {
 int main(int argc, char *argv[]) {
     // Parsing command line
     string confFileName;
+    double negPoisson=0,threshold=0;
+    int nWin=0,trainIndEnd=0,testIndEnd=0;
     int classifier = -1, doTraining = false, doTesting = false, doT2 = false, inputCounter = 1;
 
     if (argc == 1) {
@@ -72,6 +75,16 @@ int main(int argc, char *argv[]) {
             return EXIT_SUCCESS;
         } else if (!strcmp(argv[inputCounter], "-c")) {
             confFileName = argv[++inputCounter];
+        } else if (!strcmp(argv[inputCounter], "-negPoisson")) {
+            negPoisson = strtod(argv[++inputCounter],NULL);
+        } else if (!strcmp(argv[inputCounter], "-nWin")) {
+            nWin = int(strtod(argv[++inputCounter],NULL));
+        } else if (!strcmp(argv[inputCounter], "-threshold")) {
+            threshold = strtod(argv[++inputCounter],NULL);
+        } else if (!strcmp(argv[inputCounter], "-trainIndEnd")) {
+            trainIndEnd = int(strtod(argv[++inputCounter],NULL));
+        } else if (!strcmp(argv[inputCounter], "-testIndEnd")) {
+            testIndEnd = int(strtod(argv[++inputCounter],NULL));
         } else if (!strcmp(argv[inputCounter], "--ort")) {
             classifier = ORT;
         } else if (!strcmp(argv[inputCounter], "--orf")) {
@@ -112,18 +125,11 @@ int main(int argc, char *argv[]) {
     }
 
     // Load the hyperparameters
-    Hyperparameters hp(confFileName);
+    Hyperparameters hp(confFileName,negPoisson,threshold,nWin,trainIndEnd,testIndEnd);
 
     // Creating the train data
     DataSet dataset_tr, dataset_ts;
     dataset_tr.load(hp.trainData, hp.trainLabels, hp.trainSnids, hp.trainTime, hp.trainIndStart, hp.trainIndEnd);
-//    if (hp.trainIndEnd < dataset_tr.m_samples.size()) {
-//        dataset_tr.m_samples.erase(dataset_tr.m_samples.begin()+hp.trainIndEnd, dataset_tr.m_samples.end());
-//    }
-//    if (hp.trainIndStart >= 2 ) {
-//        dataset_tr.m_samples.erase(dataset_tr.m_samples.begin(), dataset_tr.m_samples.begin()+hp.trainIndStart-1);
-//    }
-//    dataset_tr.m_numSamples = dataset_tr.m_samples.size();
     if (doT2 || doTesting) {
         dataset_ts.load(hp.testData, hp.testLabels, hp.testSnids, hp.testTime, hp.testIndStart, hp.testIndEnd);
     }

@@ -128,6 +128,7 @@ class OnlineRFR: public Classifier {
  protected:
     double m_counter;
     double m_oobe;
+    double m_negPoisson;
     
     vector<OnlineTreeR*> m_trees;
 };

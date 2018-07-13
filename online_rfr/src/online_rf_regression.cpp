@@ -277,6 +277,7 @@ void OnlineTreeR::eval(Sample& sample, Result& result) {
 
 OnlineRFR::OnlineRFR(const Hyperparameters& hp, const int& numClasses, const int& numFeatures, const VectorXd& minFeatRange, const VectorXd& maxFeatRange) :
     Classifier(hp, numClasses), m_counter(0.0), m_oobe(0.0) {
+    m_negPoisson = hp.negPoisson;
     OnlineTreeR *tree;
     for (int nTree = 0; nTree < hp.numTrees; nTree++) {
         tree = new OnlineTreeR(hp, numClasses, numFeatures, minFeatRange, maxFeatRange);
@@ -301,8 +302,8 @@ void OnlineRFR::update(Sample& sample) {
             numTries = poisson(1.0);
         }
         if (sample.yr == 0) {
-            //numTries = poisson(1.0);
-            numTries = poisson(0.05);
+            if(m_negPoisson==0)m_negPoisson=0.05;
+            numTries = poisson(m_negPoisson);
         }
         if (numTries) {
             //cout << "[OnlineRFR::update]\tSample_id:" << sample.id << "\tsample.y:" << sample.yr << "\tnumTries:" << numTries << endl;

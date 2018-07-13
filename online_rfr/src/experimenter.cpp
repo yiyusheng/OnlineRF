@@ -73,7 +73,7 @@ vector<Result> test(Classifier* model, DataSet& dataset, Hyperparameters& hp) {
          "\t" << dataset.m_samples[nSamp].sn_id << "\t" << dataset.m_samples[nSamp].t << endl;
     }
     file.close();
-    string error = compError(results, dataset);
+    string error = compError(results, dataset, hp.nWin, hp.threshold);
 
     if (hp.verbose) {
         cout << "--- " << model->name() << " test result: " << error << endl;
@@ -116,7 +116,7 @@ vector<Result> trainAndTest(Classifier* model, DataSet& dataset_tr, DataSet& dat
         }
         
         results = test(model, dataset_ts, hp);
-        testError.push_back(compError(results, dataset_ts));
+        testError.push_back(compError(results, dataset_ts, hp.nWin, hp.threshold));
     }
     
     timeval endTime;
@@ -145,9 +145,9 @@ vector<Result> trainAndTest(Classifier* model, DataSet& dataset_tr, DataSet& dat
     return results;
 }
 
-string compError(const vector<Result>& results, const DataSet& dataset) {
-    int nWin = 10;
-    double threshold = 0.5;
+string compError(const vector<Result>& results, const DataSet& dataset, int nWin, double threshold) {
+    //int nWin = 10;
+    //double threshold = 0.5;
     double sample_result[dataset.m_numSamples][4];
     for (int nSamp = 0; nSamp < dataset.m_numSamples; nSamp++) {
       sample_result[nSamp][0] = dataset.m_samples[nSamp].sn_id;
