@@ -90,7 +90,7 @@ void DataSet::load(const string& x_filename, const string& y_filename, const str
         sample.id = nSamp;
         sample.w = 1.0;
         yfp >> sample.yr;
-        sample.y = int(sample.yr);
+        sample.y = (sample.yr>0)?1:0;
         zfp >> sample.sn_id;
         tfp >> sample.t;
         for (int nFeat = 0; nFeat < m_numFeatures; nFeat++) {

@@ -15,6 +15,8 @@
 #include <sys/time.h>
 #include <iomanip>
 #include <math.h>
+#include <numeric>
+#include <string>
 #include "experimenter.h"
 
 void train(Classifier* model, DataSet& dataset, Hyperparameters& hp) {
@@ -56,24 +58,56 @@ vector<Result> test(Classifier* model, DataSet& dataset, Hyperparameters& hp) {
     gettimeofday(&startTime, NULL);
     
     // Write the results
+    /*
     string saveFile = hp.savePath + "errors";
-    ofstream file(saveFile.c_str(), ios::binary);
+    ofstream file(saveFile.c_str(), ios::trunc);
     if (!file) {
         cout << "Could not access " << saveFile << endl;
         exit(EXIT_FAILURE);
     }
+    file << "yr\tpred\tsn\ttime" << endl;
+    */
 
     vector<Result> results;
     for (int nSamp = 0; nSamp < dataset.m_numSamples; nSamp++) {
         Result result(dataset.m_numClasses);
         model->eval(dataset.m_samples[nSamp], result);
         results.push_back(result);
-        file << setprecision(4) << \
-          dataset.m_samples[nSamp].yr << "\t" << result.predictionR <<\
-         "\t" << dataset.m_samples[nSamp].sn_id << "\t" << dataset.m_samples[nSamp].t << endl;
+        //file << setprecision(4) << dataset.m_samples[nSamp].yr << "\t" << result.predictionR <<"\t" << dataset.m_samples[nSamp].sn_id << "\t" << dataset.m_samples[nSamp].t << endl;
     }
-    file.close();
-    string error = compError(results, dataset, hp.nWin, hp.threshold);
+    //file.close();
+    
+
+    // save result
+    char str[12];
+    sprintf(str,"%d",hp.trainIndEnd);
+    string saveFile_result = hp.savePath + "OnlineRF/smart2/experiment_"+str;
+    //ofstream file(saveFile_result.c_str(), std::ios_base::app);
+    ofstream file_result(saveFile_result.c_str(), ios::trunc);
+    if (!file_result) {
+      cout << "Could not access " << saveFile_result << endl;
+      exit(EXIT_FAILURE);
+    }
+    file_result << "hp.negPoisson\tnWin\tthreshold\ttesterror\ttp\ttotalp\tFDR\tfp\ttotaln\tFAR\t" << endl;
+
+    //Get test error
+    string error;
+    if(hp.testParameter){
+    // experiment for the best nWin and threshold when predicting disk failure
+      int a_nWin[13] = {1,2,3,5,7,10,20,30,40,50,60,70,80};
+      double a_threshold[1000];
+      for(int i=0;i<1000;i++)
+        a_threshold[i] = (double(i))/1000;
+      for(int i=0;i < int(sizeof(a_threshold)/sizeof(double));i++){
+        for(int j=0;j < int(sizeof(a_nWin)/sizeof(int));j++){
+          error = compError(results, dataset, hp,file_result,a_nWin[j],a_threshold[i]);
+        }
+      }
+    }else{
+    // formal usage
+      error = compError(results, dataset, hp,file_result);
+    }
+    file_result.close();
 
     if (hp.verbose) {
         cout << "--- " << model->name() << " test result: " << error << endl;
@@ -87,114 +121,127 @@ vector<Result> test(Classifier* model, DataSet& dataset, Hyperparameters& hp) {
     return results;
 }
 
-vector<Result> trainAndTest(Classifier* model, DataSet& dataset_tr, DataSet& dataset_ts, Hyperparameters& hp) {
-    timeval startTime;
-    gettimeofday(&startTime, NULL);
-    
-    vector<Result> results;
-    vector<int> randIndex;
-    int sampRatio = dataset_tr.m_numSamples / 10;
-    vector<double> trainError(hp.numEpochs, 0.0);
-    vector<string> testError;
-    for (int nEpoch = 0; nEpoch < hp.numEpochs; nEpoch++) {
-        randPerm(dataset_tr.m_numSamples, randIndex);
-        for (int nSamp = 0; nSamp < dataset_tr.m_numSamples; nSamp++) {
-            if (hp.findTrainError) {
-                Result result(dataset_tr.m_numClasses);
-                model->eval(dataset_tr.m_samples[randIndex[nSamp]], result);
-                if (result.prediction != dataset_tr.m_samples[randIndex[nSamp]].y) {
-                    trainError[nEpoch]++;
-                }
-            }
-            
-            model->update(dataset_tr.m_samples[randIndex[nSamp]]);
-            if (hp.verbose && (nSamp % sampRatio) == 0) {
-                cout << "--- " << model->name() << " training --- Epoch: " << nEpoch + 1 << " --- ";
-                cout << (10 * nSamp) / sampRatio << "%";
-                cout << " --- Training error = " << trainError[nEpoch] << "/" << nSamp <<endl;
-            }
-        }
-        
-        results = test(model, dataset_ts, hp);
-        testError.push_back(compError(results, dataset_ts, hp.nWin, hp.threshold));
+/*
+template <typename T>
+vector<size_t> sort_indexes(const vector<T> &v) {
+
+  // initialize original index locations
+  vector<size_t> idx(v.size());
+  iota(idx.begin(), idx.end(), 0);
+
+  // sort indexes based on comparing values in v
+  sort(idx.begin(), idx.end(),
+       [&v](size_t i1, size_t i2) {return v[i1] < v[i2];});
+
+  return idx;
+}
+*/
+
+void sort_indexes(int* arr,int asc,int* index,int len){
+  int tmp;
+  for(int i=0; i<len; i++)index[i] = i;
+
+  for(int i=len; i>0; i--){
+    for(int j=0; j<i; j++){
+      if((asc && arr[j] > arr[j+1]) || (!asc && arr[j] < arr[i+1])){
+        tmp = arr[j];
+        arr[j] = arr[j+1];
+        arr[j+1] = tmp;
+
+        tmp = index[j];
+        index[j] = index[j+1];
+        index[j+1] = tmp;
+      }
     }
-    
-    timeval endTime;
-    gettimeofday(&endTime, NULL);
-    cout << "--- Total training and testing time = ";
-    cout << (endTime.tv_sec - startTime.tv_sec + (endTime.tv_usec - startTime.tv_usec) / 1e6) << " seconds." << endl;
-    
-    if (hp.verbose) {
-        cout << endl << "--- " << model->name() << " test result over epochs: " << endl;
-        dispErrors(testError);
-    }
-    
-    // Write the results
-    string saveFile = hp.savePath + ".errors";
-    ofstream file(saveFile.c_str(), ios::binary);
-    if (!file) {
-        cout << "Could not access " << saveFile << endl;
-        exit(EXIT_FAILURE);
-    }
-    file << hp.numEpochs << " 1" << endl;
-    for (int nEpoch = 0; nEpoch < hp.numEpochs; nEpoch++) {
-        file << testError[nEpoch] << endl;
-    }
-    file.close();
-    
-    return results;
+  }
 }
 
-string compError(const vector<Result>& results, const DataSet& dataset, int nWin, double threshold) {
-    //int nWin = 10;
-    //double threshold = 0.5;
+string compError(const vector<Result>& results, const DataSet& dataset, Hyperparameters& hp,ofstream& file, int nw, double thred){
+
+    int nWin = (nw==-1)?hp.nWin:nw;
+    double threshold = (thred==-1)?hp.threshold:thred ;
     double sample_result[dataset.m_numSamples][4];
+
+    //dataset sort: t and sn_id
+    /*
+    int len = dataset.m_numSamples;
+    int arr_t[len],arr_sn[len],index_t[len],index_sn[len];
+    for (int nSamp=0; nSamp < len; nSamp++){
+      arr_t[nSamp] = dataset.m_samples[nSamp].t;
+      arr_sn[nSamp] = dataset.m_samples[nSamp].sn_id;
+    }
+    sort_indexes(arr_t,1,index_t,len);
+    sort_indexes(arr_sn,0,index_sn,len);
+    for (int nSamp = 0; nSamp < dataset.m_numSamples; nSamp++) {
+      sample_result[nSamp][0] = dataset.m_samples[index_t[index_sn[nSamp]]].sn_id;
+      sample_result[nSamp][1] = dataset.m_samples[index_t[index_sn[nSamp]]].t;
+      sample_result[nSamp][2] = dataset.m_samples[index_t[index_sn[nSamp]]].y;
+      sample_result[nSamp][3] = results[index_t[index_sn[nSamp]]].predictionR;
+      cout << sample_result[nSamp][0] << '-' << sample_result[nSamp][1] << endl;
+    }
+    */
+        
     for (int nSamp = 0; nSamp < dataset.m_numSamples; nSamp++) {
       sample_result[nSamp][0] = dataset.m_samples[nSamp].sn_id;
       sample_result[nSamp][1] = dataset.m_samples[nSamp].t;
-      sample_result[nSamp][2] = dataset.m_samples[nSamp].y;
+      sample_result[nSamp][2] = dataset.m_samples[nSamp].yr;
       sample_result[nSamp][3] = results[nSamp].predictionR;
     }
 
-    int disk_result[37000][4];
-    memset(disk_result, 0, sizeof(int)*37000*4);
+    double disk_result[37000][4];
+    memset(disk_result, -1, sizeof(double)*37000*4);
 
-    int p_left = 0;
+    int p_left = 0, nDisk=0,a1=0,b1=0;
     for (int nSamp = 1; nSamp < dataset.m_numSamples; nSamp++) {
-      //if(sample_result[nSamp][2]==1)cout << nSamp << "-" << sample_result[nSamp][0] << "-" <<sample_result[nSamp][1] << "-" <<sample_result[nSamp][2] << "-" <<sample_result[nSamp][3] << endl;
       int smp_sn = sample_result[nSamp][0];
-      if(smp_sn == sample_result[p_left][0])
+      if(smp_sn == sample_result[p_left][0] && nSamp != dataset.m_numSamples-1)
         continue;
       else{
         int p_right = nSamp;
-        for (int i=p_left+nWin; i<p_right; i++){
-          int j=0; double sumPred = 0,avePred = 0;
+        if(nSamp == dataset.m_numSamples)p_right = nSamp+1;
+        smp_sn = sample_result[p_left][0];
+        for (int i=p_left+nWin-1; i<p_right; i++){
+          if(i==p_left+nWin-1)nDisk++;
+          int j=0; 
+          double sumPred = sample_result[i][3];
+          double avePred = 0;
 
-          for (j=i-1; j>=max(i-nWin,p_left); j--){
+          for (j=i-1; j>(i-nWin); j--){
             sumPred += sample_result[j][3];
           }
+          avePred = sumPred/nWin;
 
-          if(j==p_left-1)
-            avePred = sumPred/(i-p_left+1);
-          else 
-            avePred = sumPred/nWin;
 
+          //For disk
+          disk_result[smp_sn][0] = 1;  //valid data
+          //if(avePred>0)cout << avePred << "----------------------" << threshold << endl;
           if(avePred > threshold){
-            disk_result[smp_sn][0]++;  //valid data
             disk_result[smp_sn][1]++;  //sample predicted as positive
-            disk_result[smp_sn][2] = sample_result[p_right-1][2]; //real y
-            disk_result[smp_sn][3] = sample_result[i][1]; //time in adance
+            disk_result[smp_sn][2] = sample_result[p_left][2]; //real y
+            disk_result[smp_sn][3] = sample_result[i][1]; //time in adavance
             break;
           }else{
-            disk_result[smp_sn][0]++;
             disk_result[smp_sn][1] = 0;
-            disk_result[smp_sn][2] = sample_result[p_right-1][2];
+            disk_result[smp_sn][2] = sample_result[p_left][2];
             disk_result[smp_sn][3] = sample_result[i][1];
           }
         }
+        a1 += (disk_result[smp_sn][0]==1 && disk_result[smp_sn][2]==0)?1:0;
+        b1 += (disk_result[smp_sn][0]==1 && disk_result[smp_sn][2]>0)?1:0;
+        //cout << nDisk << "-" << a1 << "-" << b1 << "-" << a1+b1 << "-" << smp_sn <<endl;
         p_left = p_right;
       }
     }
+
+    
+    int a2=0,b2=0;
+    for (int i=0; i<37000;i++){
+      a2 += (disk_result[i][0]==1 && disk_result[i][2]==0)?1:0;
+      b2 += (disk_result[i][0]==1 && disk_result[i][2]>0)?1:0;
+    }
+    //cout << nDisk << "-" << a2 << "-" << b2 << "-" << a2+b2 << endl;
+    
+    
 
     int tp = 0, totalp = 0, fp = 0, totaln = 0;
     for (int i = 0; i < 37000; i++) {
@@ -205,13 +252,15 @@ string compError(const vector<Result>& results, const DataSet& dataset, int nWin
           if (disk_result[i][1] > 0) {
             fp++;
           }
-        }
-        if (disk_result[i][2] > 0) {
+        }else if (disk_result[i][2] > 0) {
           totalp++;
           if (disk_result[i][1] > 0) {
             tp++;
           }
+        }else{
+          cout << "warning\t" << i << "-" << disk_result[i][1] << "-" << disk_result[i][2] << endl;
         }
+
       }
     }
     double error = fp + (totalp - tp);  // false positive and missing positive
@@ -220,6 +269,21 @@ string compError(const vector<Result>& results, const DataSet& dataset, int nWin
     double far = fp*1.0 / totaln;
     char resultt[100];
     sprintf(resultt, "testError->%.4f FDR->%d/%d->%.4f, FAR->%d/%d->%.4f",testerror, tp, totalp, fdr, fp, totaln, far);
+    
+    // save result by york [20180713]
+    file << setprecision(4) << \
+            hp.negPoisson << "\t" <<\
+            nWin << "\t" <<\
+            threshold << "\t" <<\
+            testerror << "\t" <<\
+            tp << "\t" <<\
+            totalp << "\t" <<\
+            fdr << "\t" <<\
+            fp << "\t" <<\
+            totaln << "\t" <<\
+            far << "\t" << endl;
+    // save result
+
     string result(resultt);
     return result;
 }

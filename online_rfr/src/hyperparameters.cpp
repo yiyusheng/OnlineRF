@@ -21,7 +21,7 @@ using namespace libconfig;
 
 Hyperparameters::Hyperparameters(const string& confFile,\
     double negP, double thre, int nw,\
-    int trainie, int testie) {
+    int trainie, int testie, int testP) {
     cout << "Loading config file: " << confFile << " ... ";
 
     Config configFile;
@@ -80,11 +80,14 @@ Hyperparameters::Hyperparameters(const string& confFile,\
     verbose = configFile.lookup("Output.verbose");
 
     // Regression and convenient experiment
-    if(negP!=0)negPoisson = negP;
-    if(thre!=0)threshold = thre;
-    if(nw!=0)nWin = nw;
-    if(trainie!=0)trainIndEnd = trainie;
-    if(testie!=0)testIndEnd = testie;
+    negPoisson = (negP==0)?0.05:negP;
+    threshold = (thre==0)?0.5:thre;
+    nWin = (nw==0)?1:nw;
+    trainIndEnd = (trainie==0)?32267:trainie;
+    testIndEnd = (testie==0)?153147:testie;
+    testParameter = (testP==0)?0:testP;
 
     cout << "Done." << endl;
+    cout << negPoisson<< "-" << threshold << "-" << nWin << "-" << trainIndEnd << "-" << testIndEnd 
+      << "-" << testParameter << "-" << maxDepth << "-" << numRandomTests << "-" << counterThreshold << "-" << numTrees << endl;
 }

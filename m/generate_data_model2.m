@@ -1,5 +1,6 @@
 % Load train data
 clc;clear;
+export = 0;
 dir_data = '/home/xzhuang/Data/xzData20180711/mat/';
 dir_mydata = '~/Data/OnlineRF/';
 load(strcat(dir_data,'smart2_all.mat'));
@@ -36,8 +37,12 @@ predictorNames = {...
     'smart_197_normalized',...  
     'smart_198_normalized'};
 
+smart2_all = add_health_degree(smart2_all,0);
+smart2_train = add_health_degree(smart2_train_all,0);
+smart2_test = add_health_degree(smart2_dtest,1);
+
+if export
 % For all
-smart2_all = add_health_degree(smart2_all);
 smart2_all_data = smart2_all{:, predictorNames};
 smart2_all_labels = smart2_all.class;
 smart2_all_snids = smart2_all.sn_id;
@@ -55,7 +60,6 @@ dlmwrite(strcat(dir_mydata,'smart2_all.time'), size(smart2_all_time), 'delimiter
 dlmwrite(strcat(dir_mydata,'smart2_all.time'), smart2_all_time, 'delimiter', ' ', 'precision', '%u', '-append');
 
 % For train
-smart2_train = add_health_degree(smart2_train_all);
 smart2_train_data = smart2_train{:, predictorNames};
 smart2_train_labels = smart2_train.class;
 smart2_train_snids = smart2_train.sn_id;
@@ -73,7 +77,6 @@ dlmwrite(strcat(dir_mydata,'smart2_train.time'), size(smart2_train_time), 'delim
 dlmwrite(strcat(dir_mydata,'smart2_train.time'), smart2_train_time, 'delimiter', ' ', 'precision', '%u', '-append');
 
 % For test
-smart2_test = add_health_degree(smart2_dtest);
 smart2_test_data = smart2_test{:, predictorNames};
 smart2_test_labels = smart2_test.class;
 smart2_test_snids = smart2_test.sn_id;
@@ -89,3 +92,4 @@ dlmwrite(strcat(dir_mydata,'smart2_test.health'), size(smart2_test_health), 'del
 dlmwrite(strcat(dir_mydata,'smart2_test.health'), smart2_test_health, 'delimiter', ' ', 'precision', '%u', '-append');
 dlmwrite(strcat(dir_mydata,'smart2_test.time'), size(smart2_test_time), 'delimiter', ' ', 'precision', '%u');
 dlmwrite(strcat(dir_mydata,'smart2_test.time'), smart2_test_time, 'delimiter', ' ', 'precision', '%u', '-append');
+end

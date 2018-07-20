@@ -1,0 +1,79 @@
+OnlineMCBoost Classification Package:
+Loading config file: conf/train_test.conf ... Done.
+0.05-0.6-10-30261-153147-1-1000-10000-200-100
+Loading data file: /home/xzhuang/Data/OnlineRF/smart2_train.data ... 
+Loaded 30261 samples with 29 features and 2 classes.
+Loading data file: /home/xzhuang/Data/OnlineRF/smart2_test.data ... 
+Loaded 153147 samples with 29 features and 2 classes.
+--- OnlineRFR training --- Epoch: 1 --- 0% --- Training error = 0/0=-nan
+--- OnlineRFR training --- Epoch: 1 --- 10% --- Training error = 19.9719/3026=0.0066001
+--- OnlineRFR training --- Epoch: 1 --- 20% --- Training error = 27.0292/6052=0.00446617
+--- OnlineRFR training --- Epoch: 1 --- 30% --- Training error = 30.5007/9078=0.00335985
+--- OnlineRFR training --- Epoch: 1 --- 40% --- Training error = 37.6439/12104=0.00311004
+--- OnlineRFR training --- Epoch: 1 --- 50% --- Training error = 44.3126/15130=0.00292879
+--- OnlineRFR training --- Epoch: 1 --- 60% --- Training error = 50.2182/18156=0.00276593
+--- OnlineRFR training --- Epoch: 1 --- 70% --- Training error = 55.3111/21182=0.00261123
+--- OnlineRFR training --- Epoch: 1 --- 80% --- Training error = 61.5972/24208=0.0025445
+--- OnlineRFR training --- Epoch: 1 --- 90% --- Training error = 68.664/27234=0.00252126
+--- OnlineRFR training --- Epoch: 1 --- 100% --- Training error = 74.6961/30260=0.00246848
+--- OnlineRFR training time = 903.292 seconds.
+--- OnlineRFR test result: testError->0.3187 FDR->0/407->0.0000, FAR->0/870->0.0000
+--- OnlineRFR testing time = 149.279 seconds.
+OnlineMCBoost Classification Package:
+Loading config file: conf/train_test.conf ... Done.
+0.05-0.6-10-92495-153147-1-1000-10000-200-100
+Loading data file: /home/xzhuang/Data/OnlineRF/smart2_train.data ... 
+Loaded 92495 samples with 29 features and 2 classes.
+Loading data file: /home/xzhuang/Data/OnlineRF/smart2_test.data ... 
+Loaded 153147 samples with 29 features and 2 classes.
+--- OnlineRFR training --- Epoch: 1 --- 0% --- Training error = 0/0=-nan
+--- OnlineRFR training --- Epoch: 1 --- 10% --- Training error = 43.5895/9249=0.00471289
+--- OnlineRFR training --- Epoch: 1 --- 20% --- Training error = 73.6025/18498=0.00397894
+--- OnlineRFR training --- Epoch: 1 --- 30% --- Training error = 103.491/27747=0.00372982
+--- OnlineRFR training --- Epoch: 1 --- 40% --- Training error = 135.254/36996=0.0036559
+--- OnlineRFR training --- Epoch: 1 --- 50% --- Training error = 166.216/46245=0.00359424
+--- OnlineRFR training --- Epoch: 1 --- 60% --- Training error = 192.553/55494=0.0034698
+--- OnlineRFR training --- Epoch: 1 --- 70% --- Training error = 226.449/64743=0.00349765
+--- OnlineRFR training --- Epoch: 1 --- 80% --- Training error = 255.685/73992=0.00345558
+--- OnlineRFR training --- Epoch: 1 --- 90% --- Training error = 285.95/83241=0.00343521
+--- OnlineRFR training --- Epoch: 1 --- 100% --- Training error = 326.676/92490=0.00353201
+--- OnlineRFR training time = 3962.02 seconds.
+--- OnlineRFR test result: testError->0.3211 FDR->0/407->0.0000, FAR->3/870->0.0034
+--- OnlineRFR testing time = 159.132 seconds.
+OnlineMCBoost Classification Package:
+Loading config file: conf/train_test.conf ... Done.
+0.05-0.6-10-152778-153147-1-1000-10000-200-100
+Loading data file: /home/xzhuang/Data/OnlineRF/smart2_train.data ... 
+Loaded 152778 samples with 29 features and 2 classes.
+Loading data file: /home/xzhuang/Data/OnlineRF/smart2_test.data ... 
+Loaded 153147 samples with 29 features and 2 classes.
+--- OnlineRFR training --- Epoch: 1 --- 0% --- Training error = 0/0=-nan
+--- OnlineRFR training --- Epoch: 1 --- 10% --- Training error = 98.9453/15277=0.00647675
+--- OnlineRFR training --- Epoch: 1 --- 20% --- Training error = 166.389/30554=0.00544573
+--- OnlineRFR training --- Epoch: 1 --- 30% --- Training error = 228.912/45831=0.0049947
+--- OnlineRFR training --- Epoch: 1 --- 40% --- Training error = 277.266/61108=0.00453731
+--- OnlineRFR training --- Epoch: 1 --- 50% --- Training error = 333.36/76385=0.00436421
+--- OnlineRFR training --- Epoch: 1 --- 60% --- Training error = 398.462/91662=0.00434708
+--- OnlineRFR training --- Epoch: 1 --- 70% --- Training error = 461.019/106939=0.00431104
+OnlineMCBoost Classification Package:
+Loading config file: conf/train_test.conf ... Done.
+0.05-0.6-10-215387-153147-1-1000-10000-200-100
+Loading data file: /home/xzhuang/Data/OnlineRF/smart2_train.data ... 
+Loaded 215387 samples with 29 features and 2 classes.
+Loading data file: /home/xzhuang/Data/OnlineRF/smart2_test.data ... 
+Loaded 153147 samples with 29 features and 2 classes.
+--- OnlineRFR training --- Epoch: 1 --- 0% --- Training error = 0/0=-nan
+OnlineMCBoost Classification Package:
+Loading config file: conf/train_test.conf ... Done.
+0.05-0.6-10-273983-153147-1-1000-10000-200-100
+Loading data file: /home/xzhuang/Data/OnlineRF/smart2_train.data ... 
+Loaded 273983 samples with 29 features and 2 classes.
+Loading data file: /home/xzhuang/Data/OnlineRF/smart2_test.data ... 
+OnlineMCBoost Classification Package:
+Loading config file: conf/train_test.conf ... Done.
+0.05-0.6-10-335970-153147-1-1000-10000-200-100
+Loading data file: /home/xzhuang/Data/OnlineRF/smart2_train.data ... 
+Loaded 335970 samples with 29 features and 2 classes.
+Loading data file: /home/xzhuang/Data/OnlineRF/smart2_test.data ... 
+Loaded 153147 samples with 29 features and 2 classes.
+--- OnlineRFR training --- Epoch: 1 --- 0% --- Training error = 0/0=-nan

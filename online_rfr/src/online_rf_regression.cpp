@@ -247,11 +247,13 @@ OnlineTreeR::OnlineTreeR(const Hyperparameters& hp, const int& numClasses, const
 
 void OnlineNodeR::print() {
   if (!m_isLeaf){
+    /*
     cout << setprecision(4) << "[Node]\t\tdepth:" << m_depth <<\
       "\tm_label:" << m_label << \
       "\tnode_counter_all:" << m_counter+m_parentCounter <<\
       "\tnode_counter_split:" << m_valueY.size() << \
       "\tbest_test_split:" << m_bestTest->trueCount() << '\t' << m_bestTest->falseCount() << endl;
+      */
     m_leftChildNode->print();
     m_rightChildNode->print();
   }else{

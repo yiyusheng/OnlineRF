@@ -29,7 +29,7 @@ class Hyperparameters {
  public:
     Hyperparameters();
     Hyperparameters(const string& confFile,double negP, double thre,\
-        int nw, int trainie, int testie);
+        int nw, int trainie, int testie, int testP);
 
     // Forest
     int numRandomTests;
@@ -83,6 +83,7 @@ class Hyperparameters {
     double negPoisson;
     double threshold;
     int nWin;
+    int testParameter;
 
 };
 

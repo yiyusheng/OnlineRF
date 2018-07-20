@@ -22,7 +22,7 @@ void train(Classifier* model, DataSet& dataset, Hyperparameters& hp);
 vector<Result> test(Classifier* model, DataSet& dataset, Hyperparameters& hp);
 vector<Result> trainAndTest(Classifier* model, DataSet& dataset_tr, DataSet& dataset_ts, Hyperparameters& hp);
 
-string compError(const vector<Result>& results, const DataSet& dataset, int nWin, double threshold);
+string compError(const vector<Result>& results, const DataSet& dataset, Hyperparameters& hp,ofstream& file, int nw=-1, double thred=-1);
 void dispErrors(const vector<string>& errors);
 
 #endif // EXPERIMENTER_H
