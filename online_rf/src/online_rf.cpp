@@ -249,6 +249,8 @@ void OnlineRF::update(Sample& sample) {
             numTries = poisson(1.0);
         }
         if (sample.y == 0) {
+            //numTries = poisson(0.012);
+            //numTries = poisson(0.03);
             numTries = poisson(0.05);
         }
         if (numTries) {
