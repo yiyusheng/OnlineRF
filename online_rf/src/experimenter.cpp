@@ -138,12 +138,14 @@ string compError(const vector<Result>& results, const DataSet& dataset) {
         lables[nSamp][1] = dataset.m_samples[nSamp].y;      //real
         lables[nSamp][2] = results[nSamp].prediction;       //pred
     }
-    int disk_result[37000][3];
+    int disk_result[37000][3],sample_error_pos = 0,sample_error_neg = 0;
     memset(disk_result, 0, sizeof(int)*37000*3);
     for (int nSamp = 0; nSamp < dataset.m_numSamples; nSamp++) {
         disk_result[lables[nSamp][0]][0]++;                 //counter of samples
         disk_result[lables[nSamp][0]][1]+=lables[nSamp][1]; //sum of y
         disk_result[lables[nSamp][0]][2]+=lables[nSamp][2]; //sum of pred
+        if(lables[nSamp][1]==1 && lables[nSamp][2]==0)sample_error_pos++;
+        if(lables[nSamp][1]==0 && lables[nSamp][2]==1)sample_error_neg++;
     }
     int tp = 0, totalp = 0, fp = 0, totaln = 0;
     for (int i = 0; i < 37000; i++) {
@@ -167,7 +169,7 @@ string compError(const vector<Result>& results, const DataSet& dataset) {
     double fdr = tp*1.0 / totalp;
     double far = fp*1.0 / totaln;
     char resultt[100];
-    sprintf(resultt, "testError->%.4f FDR->%d/%d->%.4f, FAR->%d/%d->%.4f",testerror, tp, totalp, fdr, fp, totaln, far);
+    sprintf(resultt, "testError->%.4f FDR->%d/%d->%.4f, FAR->%d/%d->%.4f, sampleErrorPos->%d, sampleErrorNeg->%d",testerror, tp, totalp, fdr, fp, totaln, far,sample_error_pos,sample_error_neg);
     string result(resultt);
     return result;
 }

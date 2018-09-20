@@ -58,7 +58,7 @@ void help() {
 
 int main(int argc, char *argv[]) {
     // Parsing command line
-    string confFileName;
+    string confFileName,outP="";
     double negPoisson=0,threshold=0;
     int nWin=0,trainIndEnd=0,testIndEnd=0,testP=0;
     int classifier = -1, doTraining = false, doTesting = false, doT2 = false, inputCounter = 1;
@@ -87,6 +87,8 @@ int main(int argc, char *argv[]) {
             testIndEnd = int(strtod(argv[++inputCounter],NULL));
         } else if (!strcmp(argv[inputCounter], "-testP")) {
             testP = int(strtod(argv[++inputCounter],NULL));
+        } else if (!strcmp(argv[inputCounter], "-outP")) {
+            outP = argv[++inputCounter];
         } else if (!strcmp(argv[inputCounter], "--ort")) {
             classifier = ORT;
         } else if (!strcmp(argv[inputCounter], "--orf")) {
@@ -127,7 +129,7 @@ int main(int argc, char *argv[]) {
     }
 
     // Load the hyperparameters
-    Hyperparameters hp(confFileName,negPoisson,threshold,nWin,trainIndEnd,testIndEnd,testP);
+    Hyperparameters hp(confFileName,negPoisson,threshold,nWin,trainIndEnd,testIndEnd,testP,outP);
 
     // Creating the train data
     DataSet dataset_tr, dataset_ts;

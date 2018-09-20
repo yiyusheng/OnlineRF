@@ -37,14 +37,15 @@ if __name__=='__main__':
     982910,994404,1010636,1020460,1024840,1029559,1029590,
     ]
   
-  lastid = train2_lastid
+  #train1_lastid_selected = [32193]
+  lastid = train1_lastid
   idx = range(1,len(lastid),1)
   lastid_selected = [lastid[i] for i in idx]
-  negP = [0.0001]
+  negP = [0.1]
   #negP = [0.01,0.03,0.05,0.07,0.1,0.13,0.15]
-  outP = "SB00001"
+  outP = "SA01"
 
-  cmd = "cd /home/yiyusheng/Code/C/OnlineRF/online_rfr;./OMCBoost -c conf/smart2_train_test.conf --orfr --train --test -negPoisson %s -trainIndEnd %s -testP 1 -outP %s > /home/yiyusheng/Data/log/OnlineRF/%s_%s_%s"
+  cmd = "cd /home/yiyusheng/Code/C/OnlineRF/online_rfr;./OMCBoost -c conf/smart1_train_test.conf --orfr --train --test -negPoisson %s -trainIndEnd %s -testP 1 -outP %s > /home/yiyusheng/Data/log/OnlineRF/%s_%s_%s"
 
   para1 = lastid_selected
   para2 = negP

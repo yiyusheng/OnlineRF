@@ -17,6 +17,7 @@
 #include <math.h>
 #include <numeric>
 #include <string>
+#include <sys/stat.h>
 #include "experimenter.h"
 
 void train(Classifier* model, DataSet& dataset, Hyperparameters& hp) {
@@ -78,26 +79,31 @@ vector<Result> test(Classifier* model, DataSet& dataset, Hyperparameters& hp) {
     //file.close();
     
 
-    // save result
-    char str[12];
-    sprintf(str,"%d",hp.trainIndEnd);
-    string saveFile_result = hp.savePath + "OnlineRF/smart2/experiment_"+str;
-    //ofstream file(saveFile_result.c_str(), std::ios_base::app);
-    ofstream file_result(saveFile_result.c_str(), ios::trunc);
+    // Save Result
+    char str[100];
+    string dir_path = hp.savePath + hp.outputPrefix +"/";
+    mkdir(dir_path.c_str(),S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+
+    sprintf(str,"exp_%d_%.2f",hp.trainIndEnd,hp.negPoisson);
+    string file_path = dir_path+str;
+    ofstream file_result(file_path.c_str(), ios::trunc);
+    //ofstream file(file_path.c_str(), std::ios_base::app);
     if (!file_result) {
-      cout << "Could not access " << saveFile_result << endl;
+      cout << "Could not access " << file_path << endl;
       exit(EXIT_FAILURE);
     }
-    file_result << "hp.negPoisson\tnWin\tthreshold\ttesterror\ttp\ttotalp\tFDR\tfp\ttotaln\tFAR\t" << endl;
-
+    file_result << "TrEnd\tnegP\tnWin\tthreshold\ttesterror\ttp\ttotalp\tFDR\tfp\ttotaln\tFAR\t" << endl;
+    
     //Get test error
     string error;
     if(hp.testParameter){
     // experiment for the best nWin and threshold when predicting disk failure
-      int a_nWin[13] = {1,2,3,5,7,10,20,30,40,50,60,70,80};
-      double a_threshold[1000];
-      for(int i=0;i<1000;i++)
-        a_threshold[i] = (double(i))/1000;
+      int a_nWin[7] = {1,3,5,10,15,30,60};
+      //int a_nWin[13] = {1,2,3,5,7,10,20,30,50};
+      const int n_thred = 800, demomi = 1000;
+      double a_threshold[n_thred];
+      for(int i=0;i<n_thred;i++)
+        a_threshold[i] = (double(i))/demomi;
       for(int i=0;i < int(sizeof(a_threshold)/sizeof(double));i++){
         for(int j=0;j < int(sizeof(a_nWin)/sizeof(int));j++){
           error = compError(results, dataset, hp,file_result,a_nWin[j],a_threshold[i]);
@@ -120,22 +126,6 @@ vector<Result> test(Classifier* model, DataSet& dataset, Hyperparameters& hp) {
     
     return results;
 }
-
-/*
-template <typename T>
-vector<size_t> sort_indexes(const vector<T> &v) {
-
-  // initialize original index locations
-  vector<size_t> idx(v.size());
-  iota(idx.begin(), idx.end(), 0);
-
-  // sort indexes based on comparing values in v
-  sort(idx.begin(), idx.end(),
-       [&v](size_t i1, size_t i2) {return v[i1] < v[i2];});
-
-  return idx;
-}
-*/
 
 void sort_indexes(int* arr,int asc,int* index,int len){
   int tmp;
@@ -160,7 +150,7 @@ string compError(const vector<Result>& results, const DataSet& dataset, Hyperpar
 
     int nWin = (nw==-1)?hp.nWin:nw;
     double threshold = (thred==-1)?hp.threshold:thred ;
-    double sample_result[dataset.m_numSamples][4];
+    double (*sample_result)[4] = new double[dataset.m_numSamples][4];
 
     //dataset sort: t and sn_id
     /*
@@ -197,24 +187,21 @@ string compError(const vector<Result>& results, const DataSet& dataset, Hyperpar
       if(smp_sn == sample_result[p_left][0] && nSamp != dataset.m_numSamples-1)
         continue;
       else{
-        int p_right = nSamp;
-        if(nSamp == dataset.m_numSamples)p_right = nSamp+1;
+        int p_right = (nSamp==dataset.m_numSamples)?nSamp+1:nSamp;
         smp_sn = sample_result[p_left][0];
+
         for (int i=p_left+nWin-1; i<p_right; i++){
-          if(i==p_left+nWin-1)nDisk++;
-          int j=0; 
           double sumPred = sample_result[i][3];
           double avePred = 0;
 
-          for (j=i-1; j>(i-nWin); j--){
+          if(i==p_left+nWin-1)nDisk++;
+          for (int j=i-1; j>(i-nWin); j--){
             sumPred += sample_result[j][3];
           }
           avePred = sumPred/nWin;
-
-
+          //cout << sample_result[p_left][2] << "-" << smp_sn << "-" << p_left << "-" << p_right << endl;
           //For disk
           disk_result[smp_sn][0] = 1;  //valid data
-          //if(avePred>0)cout << avePred << "----------------------" << threshold << endl;
           if(avePred > threshold){
             disk_result[smp_sn][1]++;  //sample predicted as positive
             disk_result[smp_sn][2] = sample_result[p_left][2]; //real y
@@ -228,18 +215,20 @@ string compError(const vector<Result>& results, const DataSet& dataset, Hyperpar
         }
         a1 += (disk_result[smp_sn][0]==1 && disk_result[smp_sn][2]==0)?1:0;
         b1 += (disk_result[smp_sn][0]==1 && disk_result[smp_sn][2]>0)?1:0;
+        //cout << nDisk << "-" << a1 << "-" << disk_result[smp_sn][2]<< "-" << b1 << "-" << a1+b1 << "-" << smp_sn <<endl;
         //cout << nDisk << "-" << a1 << "-" << b1 << "-" << a1+b1 << "-" << smp_sn <<endl;
         p_left = p_right;
       }
     }
 
-    
+    /*
     int a2=0,b2=0;
     for (int i=0; i<37000;i++){
       a2 += (disk_result[i][0]==1 && disk_result[i][2]==0)?1:0;
       b2 += (disk_result[i][0]==1 && disk_result[i][2]>0)?1:0;
     }
     //cout << nDisk << "-" << a2 << "-" << b2 << "-" << a2+b2 << endl;
+    */
     
     
 
@@ -271,16 +260,9 @@ string compError(const vector<Result>& results, const DataSet& dataset, Hyperpar
     sprintf(resultt, "testError->%.4f FDR->%d/%d->%.4f, FAR->%d/%d->%.4f",testerror, tp, totalp, fdr, fp, totaln, far);
     
     // save result by york [20180713]
-    file << setprecision(4) << \
-            hp.negPoisson << "\t" <<\
-            nWin << "\t" <<\
-            threshold << "\t" <<\
-            testerror << "\t" <<\
-            tp << "\t" <<\
-            totalp << "\t" <<\
-            fdr << "\t" <<\
-            fp << "\t" <<\
-            totaln << "\t" <<\
+    file << setprecision(4) << hp.trainIndEnd << "\t" << hp.negPoisson << "\t" <<
+            nWin << "\t" << threshold << "\t" << testerror << "\t" << tp << "\t" <<
+            totalp << "\t" << fdr << "\t" << fp << "\t" << totaln << "\t" <<
             far << "\t" << endl;
     // save result
 
