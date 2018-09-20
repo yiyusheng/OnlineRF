@@ -87,31 +87,31 @@ result = array2table([inputTable.datenum,pred_01hd,pred_datenum],...
 
 result = sortrows(result,'datenum');
 len_res = size(result,1);
-result.g01 = zeros(len_res,1);
-result.l01 = zeros(len_res,1);
-result.gdn = zeros(len_res,1);
-result.ldn = zeros(len_res,1);
+rd = result.datenum;
+rp01 = result.pred_01hd;
+rpdn = result.pred_dn;
 
-% parpool close;
-parpool('local',5);
-parfor i = 1:15
-    cur_datenum = result.datenum(i);
-    cur_pred_01hd = result.pred_01hd(i);
-    cur_pred_dn = result.pred_dn(i);
+delete(gcp('nocreate'));
+parfor (i=1:len_res,8)
+    cur_datenum = rd(i);
+    cur_pred_01hd = rp01(i);
+    cur_pred_dn = rpdn(i);
     
-    idx_e = find(result.datenum == cur_datenum);
+    idx_e = find(rd == cur_datenum);
     idx_g = (max(idx_e)+1):len_res;
     idx_l = 1:(min(idx_e-1));
     
-    result.g01(i) = sum(result.pred_01hd(idx_g)<cur_pred_01hd);
-    result.l01(i) = sum(result.pred_01hd(idx_l)>cur_pred_01hd);
-    result.gdn(i) = sum(result.pred_dn(idx_g)<cur_pred_dn);
-    result.ldn(i) = sum(result.pred_dn(idx_l)>cur_pred_dn);
+    g01(i) = sum(rp01(idx_g)<cur_pred_01hd);
+    l01(i) = sum(rp01(idx_l)>cur_pred_01hd);
+    gdn(i) = sum(rpdn(idx_g)<cur_pred_dn);
+    ldn(i) = sum(rpdn(idx_l)>cur_pred_dn);
 end
-
 parpool close;
 
-
+result.g01 = g01';
+result.l01 = l01';
+result.gdn = gdn';
+result.ldn = ldn';
 
 
 
