@@ -1,0 +1,8 @@
+a = 1:1:1000;
+
+parpool('local',5);
+
+parfor i=1:size(a)
+    disp(a(i));
+end
+
