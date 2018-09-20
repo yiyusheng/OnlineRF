@@ -77,3 +77,7 @@ Loaded 335970 samples with 29 features and 2 classes.
 Loading data file: /home/xzhuang/Data/OnlineRF/smart2_test.data ... 
 Loaded 153147 samples with 29 features and 2 classes.
 --- OnlineRFR training --- Epoch: 1 --- 0% --- Training error = 0/0=-nan
+--- OnlineRFR training --- Epoch: 1 --- 10% --- Training error = 196.236/33597=0.00584088
+--- OnlineRFR training --- Epoch: 1 --- 20% --- Training error = 362.905/67194=0.00540086
+--- OnlineRFR training --- Epoch: 1 --- 30% --- Training error = 548.748/100791=0.00544441
+--- OnlineRFR training --- Epoch: 1 --- 40% --- Training error = 747.729/134388=0.00556396
