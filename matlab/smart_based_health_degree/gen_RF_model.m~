@@ -85,10 +85,11 @@ end
 delete(gcp('nocreate'));
 toc
 
-result.e01 = (g01'+l01')/len_res;
-result.edn = (gdn'+ldn')/len_res;
-error_hd01 = mean(result.e01)/len_res;
-error_gdn = mean(result.edn)/len_res;
+
+result.e01 = g01'+l01';
+result.edn = gdn'+ldn';
+
+
 %% Result Analysis for parallel loop (sample v.s. disk)
 result = array2table([inputTable.datenum,pred_01hd,pred_datenum],...
     'VariableNames',{'datenum','pred_01hd','pred_dn'});       
@@ -102,11 +103,9 @@ rpdn = result.pred_dn;
 fun_sample_error = @(x)[sum(x(x~=-1))/length(x(x~=-1))];
 
 delete(gcp('nocreate'));
-parpool(24)
 tic
+parpool(24)
 parfor (i=1:len_res,24)
-% for (i=1:100)
-    disp(i);
     cur_datenum = rd(i);
     cur_pred_01hd = rp01(i);
     cur_pred_dn = rpdn(i);
@@ -131,15 +130,15 @@ parfor (i=1:len_res,24)
     edn(i) = mean(r_dn);
     
 end
-toc
 delete(gcp('nocreate'));
+toc
 
 result.e01 = e01';
 result.edn = edn';
-error_hd01 = mean(result.e01,'omitnan');
-error_gdn = mean(result.edn,'omitnan');
 
 %% Error analysis
+error_hd01 = mean(result.e01)/len_res
+error_gdn = mean(result.edn)/len_res;
 
 [G,groups] = findgroups(result.datenum);
 error_datenum_hd01 = splitapply(@mean,(result.e01),G);

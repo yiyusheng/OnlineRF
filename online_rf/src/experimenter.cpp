@@ -13,6 +13,8 @@
 
 #include <fstream>
 #include <sys/time.h>
+#include <sys/stat.h>
+#include <iomanip>
 
 #include "experimenter.h"
 
@@ -52,7 +54,23 @@ void train(Classifier* model, DataSet& dataset, Hyperparameters& hp) {
 vector<Result> test(Classifier* model, DataSet& dataset, Hyperparameters& hp) {
     timeval startTime;
     gettimeofday(&startTime, NULL);
-    
+
+    // Export result
+    string dir_path = hp.savePath + "ORF/";
+    mkdir(dir_path.c_str(),S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+
+    string file_path = dir_path+hp.outputPrefix;
+    struct stat buffer;
+    bool flag_file_exist = stat(file_path.c_str(),&buffer)==0;
+    ofstream file_result(file_path.c_str(), std::ios_base::app);
+    //ofstream file_result(file_path.c_str(), ios::trunc);
+    if (!file_result) {
+      cout << "Could not access " << file_path << endl;
+      exit(EXIT_FAILURE);
+    }  
+    if(!flag_file_exist)
+      file_result << "TrEnd\tnegP\ttesterror\ttp\ttotalp\tFDR\tfp\ttotaln\tFAR\t" << endl;
+
     vector<Result> results;
     for (int nSamp = 0; nSamp < dataset.m_numSamples; nSamp++) {
         Result result(dataset.m_numClasses);
@@ -60,7 +78,7 @@ vector<Result> test(Classifier* model, DataSet& dataset, Hyperparameters& hp) {
         results.push_back(result);
     }
     
-    string error = compError(results, dataset);
+    string error = compError(results, dataset, hp, file_result);
     if (hp.verbose) {
         cout << "--- " << model->name() << " test result: " << error << endl;
     }
@@ -73,65 +91,7 @@ vector<Result> test(Classifier* model, DataSet& dataset, Hyperparameters& hp) {
     return results;
 }
 
-vector<Result> trainAndTest(Classifier* model, DataSet& dataset_tr, DataSet& dataset_ts, Hyperparameters& hp) {
-    timeval startTime;
-    gettimeofday(&startTime, NULL);
-    
-    vector<Result> results;
-    vector<int> randIndex;
-    int sampRatio = dataset_tr.m_numSamples / 10;
-    vector<double> trainError(hp.numEpochs, 0.0);
-    vector<string> testError;
-    for (int nEpoch = 0; nEpoch < hp.numEpochs; nEpoch++) {
-        randPerm(dataset_tr.m_numSamples, randIndex);
-        for (int nSamp = 0; nSamp < dataset_tr.m_numSamples; nSamp++) {
-            if (hp.findTrainError) {
-                Result result(dataset_tr.m_numClasses);
-                model->eval(dataset_tr.m_samples[randIndex[nSamp]], result);
-                if (result.prediction != dataset_tr.m_samples[randIndex[nSamp]].y) {
-                    trainError[nEpoch]++;
-                }
-            }
-            
-            model->update(dataset_tr.m_samples[randIndex[nSamp]]);
-            if (hp.verbose && (nSamp % sampRatio) == 0) {
-                cout << "--- " << model->name() << " training --- Epoch: " << nEpoch + 1 << " --- ";
-                cout << (10 * nSamp) / sampRatio << "%";
-                cout << " --- Training error = " << trainError[nEpoch] << "/" << nSamp << endl;
-            }
-        }
-        
-        results = test(model, dataset_ts, hp);
-        testError.push_back(compError(results, dataset_ts));
-    }
-    
-    timeval endTime;
-    gettimeofday(&endTime, NULL);
-    cout << "--- Total training and testing time = ";
-    cout << (endTime.tv_sec - startTime.tv_sec + (endTime.tv_usec - startTime.tv_usec) / 1e6) << " seconds." << endl;
-    
-    if (hp.verbose) {
-        cout << endl << "--- " << model->name() << " test result over epochs: " << endl;
-        dispErrors(testError);
-    }
-    
-    // Write the results
-    string saveFile = hp.savePath + ".errors";
-    ofstream file(saveFile.c_str(), ios::binary);
-    if (!file) {
-        cout << "Could not access " << saveFile << endl;
-        exit(EXIT_FAILURE);
-    }
-    file << hp.numEpochs << " 1" << endl;
-    for (int nEpoch = 0; nEpoch < hp.numEpochs; nEpoch++) {
-        file << testError[nEpoch] << endl;
-    }
-    file.close();
-    
-    return results;
-}
-
-string compError(const vector<Result>& results, const DataSet& dataset) {
+string compError(const vector<Result>& results, const DataSet& dataset,Hyperparameters& hp,ofstream& file) {
     int lables[dataset.m_numSamples][3];
     for (int nSamp = 0; nSamp < dataset.m_numSamples; nSamp++) {
         lables[nSamp][0] = dataset.m_samples[nSamp].sn_id;  //sn
@@ -170,6 +130,12 @@ string compError(const vector<Result>& results, const DataSet& dataset) {
     double far = fp*1.0 / totaln;
     char resultt[100];
     sprintf(resultt, "testError->%.4f FDR->%d/%d->%.4f, FAR->%d/%d->%.4f, sampleErrorPos->%d, sampleErrorNeg->%d",testerror, tp, totalp, fdr, fp, totaln, far,sample_error_pos,sample_error_neg);
+
+    //save result
+    file << setprecision(4) << hp.trainIndEnd << "\t" << hp.negPoisson << "\t" <<
+            testerror << "\t" << tp << "\t" <<
+            totalp << "\t" << fdr << "\t" << fp << "\t" << totaln << "\t" << 
+            far << "\t" << endl;  
     string result(resultt);
     return result;
 }

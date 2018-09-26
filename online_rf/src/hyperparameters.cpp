@@ -19,7 +19,8 @@
 using namespace std;
 using namespace libconfig;
 
-Hyperparameters::Hyperparameters(const string& confFile) {
+Hyperparameters::Hyperparameters(const string& confFile,
+    double negP, int trainie, const string& outP) {
     cout << "Loading config file: " << confFile << " ... ";
 
     Config configFile;
@@ -71,6 +72,11 @@ Hyperparameters::Hyperparameters(const string& confFile) {
     testIndStart = configFile.lookup("Data.testIndStart");
     testIndEnd = configFile.lookup("Data.testIndEnd");
     
+    // Para
+    negPoisson = (negP==0)?0.05:negP;
+    trainIndEnd = (trainie==0)?trainIndEnd:trainie;
+    outputPrefix = (outP=="")?"exp":outP;
+
     // Output
     savePath = (const char *) configFile.lookup("Output.savePath");
     verbose = configFile.lookup("Output.verbose");

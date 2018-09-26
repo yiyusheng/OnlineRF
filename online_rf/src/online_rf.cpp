@@ -251,7 +251,8 @@ void OnlineRF::update(Sample& sample) {
         if (sample.y == 0) {
             //numTries = poisson(0.012);
             //numTries = poisson(0.03);
-            numTries = poisson(0.05);
+            //numTries = poisson(0.05);
+            numTries = poisson(m_hp->negPoisson);
         }
         if (numTries) {
             for (int nTry = 0; nTry < numTries; nTry++) {

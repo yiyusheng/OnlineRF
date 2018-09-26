@@ -84,7 +84,7 @@ vector<Result> test(Classifier* model, DataSet& dataset, Hyperparameters& hp) {
     string dir_path = hp.savePath + hp.outputPrefix +"/";
     mkdir(dir_path.c_str(),S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
-    sprintf(str,"exp_%d_%.2f",hp.trainIndEnd,hp.negPoisson);
+    sprintf(str,"exp_tie%d_negP%.3f_ntr%d",hp.trainIndEnd,hp.negPoisson,hp.numTrees);
     string file_path = dir_path+str;
     ofstream file_result(file_path.c_str(), ios::trunc);
     //ofstream file(file_path.c_str(), std::ios_base::app);

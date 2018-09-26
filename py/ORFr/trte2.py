@@ -40,11 +40,10 @@ if __name__=='__main__':
   lastid = train2_lastid
   idx = range(1,len(lastid),1)
   lastid_selected = [lastid[i] for i in idx]
-  negP = [0.0001]
-  #negP = [0.01,0.03,0.05,0.07,0.1,0.13,0.15]
-  outP = "SB00001"
+  negP = [0.01]
+  outP = "SBNP001T20"
 
-  cmd = "cd /home/yiyusheng/Code/C/OnlineRF/online_rfr;./OMCBoost -c conf/smart2_train_test.conf --orfr --train --test -negPoisson %s -trainIndEnd %s -testP 1 -outP %s > /home/yiyusheng/Data/log/OnlineRF/%s_%s_%s"
+  cmd = "cd /home/yiyusheng/Code/C/OnlineRF/online_rfr;./OMCBoost -c conf/smart2_train_test.conf --orfr --train --test -negPoisson %s -trainIndEnd %s -nTree 20 -testP 1 -outP %s > /home/yiyusheng/Data/log/OnlineRF/ORFr/%s_%s_%s"
 
   para1 = lastid_selected
   para2 = negP
@@ -55,7 +54,6 @@ if __name__=='__main__':
   for i in range(len1):
     for j in range(len2):
       p.apply_async(exec_cmd,args=(cmd,para1[i],para2[j],outP))
-
   p.close()
   p.join()
 
