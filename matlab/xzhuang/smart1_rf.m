@@ -1,3 +1,4 @@
+%% load
 %load smart1_all_1.mat
 %load numSamples1.mat
 %load smart1.mat
@@ -35,25 +36,23 @@ predictorNames = {'smart_5_raw',...
     'smart_197_normalized',...  
     'smart_198_normalized'};
 
-%npRadios = [3 3 3 3 3 5 5 5 5 5 8 8 8 8 8 10 10 10 10 10];
 npRadios = [3 5 8 10];
+numOfMonth = [1,2,5,10,15,19];
+numofMonth = 1:19;
 start_date = min(smart1_train.date);
-result = cell(length(npRadios)*5,5);
-k = 1;
-for i_numOfMonth = 1:19
+result = cell(19,length(npRadios),5);
+
+%% model and pred
+for i = numofMonth
     
-    test_start = numSamples.numOfSmart1All(i_numOfMonth) + 1;
-    test_end   = numSamples.numOfSmart1All(i_numOfMonth+1);
+    test_start = numSamples.numOfSmart1All(i) + 1;
+    test_end   = numSamples.numOfSmart1All(i+1);
     smart_test = smart1_all(test_start:test_end, :);
+    
     smart_test = scale_data(smart1_test, 1);
     
-%     if i_numOfMonth == 1
-%         train_start = 1;
-%     else
-%         train_start = numSamples.numOfSmart1Train(i_numOfMonth-1) + 1;
-%     end
     train_start = 1;
-    train_end = numSamples.numOfSmart1Train(i_numOfMonth);
+    train_end = numSamples.numOfSmart1Train(i);
     smart_train = smart1_train(train_start:train_end, :);
     smart_train = scale_data(smart_train, 1);
     smart_pos = smart_train(smart_train.class == 1, :);
@@ -67,16 +66,17 @@ for i_numOfMonth = 1:19
         smart_train = sortrows(smart_train, 'date', 'ascend');
         
         model = rf_train(smart_train, 0.01, predictorNames);
-        result{k,1} = rf_test(model, smart_test, predictorNames);
-        result{k,2} = sum(smart_train.class == 1);
-        result{k,3} = sum(smart_train.class == 0);
-        result{k,4} = i_numOfMonth;
-        result{k,5} = model;
-        k = k+1;
-        fprintf('numOfMonth = %d, %dth try\n', i_numOfMonth, j);
+        result{i,j,1} = rf_test(model, smart_test, predictorNames);
+        result{i,j,2} = sum(smart_train.class == 1);
+        result{i,j,3} = sum(smart_train.class == 0);
+        result{i,j,4} = i;
+        result{i,j,5} = model;
+        str_result = result{i,j,1};
+        fprintf('numOfMonth used: %d\tnpRatio: %d\tresult: %s\n', i, npRadio,str_result);
     end
 end
-result{1,:}
+
+% result{1,:}
 %result2_6_5 = cell2table(result, 'VariableNames', {'offlineRF_preResultOnSmart2All_eachMonth', 'numOfPosSample', 'numOfNegSample', 'numOfMonth', 'offlineRFModel'});
 %result2_6_5A = cell2table(result, 'VariableNames', {'offlineRF_preResultOnSmart2All_eachMonth', 'numOfPosSample', 'numOfNegSample', 'numOfMonth'});
 %save result2_6_5.mat result2_6_5 

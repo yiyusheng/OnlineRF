@@ -1,7 +1,4 @@
-function [hdmd,smart,cost_hdmd] = func_add_HD_mahalanobis_distance(dt,f_sort,predictorNames,sn_train,days_window)
-    %% Normalize smart to N(0,1)    
-    dt = func_scale_smart_attributes(dt,predictorNames);
-
+function [hdmd,smart,cost_hdmd] = func_add_HD_mahalanobis_distance(dt,f_sort,predictorNames,sn_train,days_window,days_cost)
     %% if f_sort == 0 then keep original order else sort by 'sn_id' and 'datenum'
     id = 1:size(dt,1);
     dt.id = id';
@@ -34,21 +31,21 @@ function [hdmd,smart,cost_hdmd] = func_add_HD_mahalanobis_distance(dt,f_sort,pre
         
         % generate MD value for all samples in pos_train based on the MD
         % space built by pos_valid group
-        MD_value(:,i) = mahal(dt_valid_pos_train{:,predictorNames(use_attr~=1)},dt_pos_valid_group{:,predictorNames(use_attr~=1)});  
+        MD_value(:,i) = mahal(double(dt_valid_pos_train{:,predictorNames(use_attr~=1)}),double(dt_pos_valid_group{:,predictorNames(use_attr~=1)}));  
         frac_samples_group(i) = size(dt_pos_valid_group,1)/size(dt_valid_pos_train,1);
     end   
 
     %% Generate weighted MD for each samples based on number of samples and number of disks in each group
     MD_value(:,(numLoops+1)) = zeros(size(MD_value,1),1);
     for i=1:numLoops
-        MD_value(:,(numLoops+1)) = MD_value(:,(numLoops+1)) + (1./MD_value(:,i))*(1/days_window(i+1))*frac_samples_group(i);
+        MD_value(:,(numLoops+1)) = MD_value(:,(numLoops+1)) + (MD_value(:,i))*(1/days_window(i+1))*frac_samples_group(i);
     end
     dt_valid_pos_train.hdmd = MD_value(:,(numLoops+1));
     
     %% Test dt_pos in train
-    addpath('/home/xzhuang/Code/C/OnlineRF/matlab/eval_Model/');
-    cost_hdmd = func_eval_disk_time_order_bydatenum(dt_valid_pos_train,'hdmd',60,10);
-    
+%     addpath('/home/xzhuang/Code/C/OnlineRF/matlab/eval_Model/');
+%     cost_hdmd = func_eval_disk_time_order_bydatenum(dt_valid_pos_train,'datenum','hdmd',days_cost,10);
+    cost_hdmd = 0;
     %% generate health degree for neg samples
     dt_neg.hdmd = zeros(size(dt_neg,1),1);
     dt_pos_test.hdmd = zeros(size(dt_pos_test,1),1);
